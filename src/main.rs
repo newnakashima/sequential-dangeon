@@ -36,7 +36,10 @@ fn game_loop(game_state: &mut GameState) {
     } else {
         // モンスターが生きている場合はモンスターの情報を表示
         println!("{}のHP: {}", game_state.current_monster.name, game_state.current_monster.hp);
+        game_state.current_monster.defensing = false;
     }
+
+    game_state.hero.defensing = false;
 
     // ユーザーの入力を促すプロンプト
     print!("どうする？\n{}: 攻撃\n{}: 防御\n{}: 逃げる\n\n{}のHP: {}\n>",
@@ -71,7 +74,9 @@ fn game_loop(game_state: &mut GameState) {
                     }
                 },
                 2 => {
-                    game_state.hero.defense *= 2;
+                    game_state.hero.defensing = true;
+                    println!("{}は防御した！", game_state.hero.name);
+                    monster_attack(&mut game_state.current_monster, &mut game_state.hero);
                 },
                 3 => {
                     println!("負け犬{}は逃げ出した！", game_state.hero.name);
@@ -91,6 +96,15 @@ fn game_loop(game_state: &mut GameState) {
         Err(_) => {
             panic!("入力エラー");
         }
+    }
+}
+
+fn monster_attack(monster: &mut Monster, hero: &mut Hero) {
+    println!("{}の攻撃！", monster.name);
+    monster.attack_to(hero);
+    if hero.hp == 0 {
+        println!("{}は死んだ", hero.name);
+        exit(0);
     }
 }
 
@@ -114,6 +128,7 @@ struct Monster {
     hp: i32,
     attack: i32,
     defense: i32,
+    defensing: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -122,15 +137,21 @@ struct Hero {
     hp: i32,
     attack: i32,
     defense: i32,
+    defensing: bool,
 }
 
 trait Attackable {
     fn name(&self) -> String;
     fn attack<T: Attackable>(&self) -> i32;
     fn defense<T: Attackable>(&self) -> i32;
+    fn defensing(&self) -> bool;
     fn attack_to<T: Attackable>(&self, target: &mut T) {
         let random_range = rand::thread_rng().gen_range(-5..5);
-        let damage = self.attack::<T>() - target.defense::<T>() + random_range;
+        let damage = if target.defensing() {
+            self.attack::<T>() - target.defense::<T>() * 2 + random_range
+        } else {
+            self.attack::<T>() - target.defense::<T>() + random_range
+        };
         if damage > 0 {
             target.damaged(damage);
         } else {
@@ -153,6 +174,7 @@ impl Monster {
             hp,
             attack,
             defense,
+            defensing: false,
         }
     }
 }
@@ -164,6 +186,7 @@ impl Hero {
             hp,
             attack,
             defense,
+            defensing: false,
         }
     }
 }
@@ -187,6 +210,9 @@ impl Attackable for Monster {
     fn set_hp(&mut self, hp: i32) {
         self.hp = hp;
     }
+    fn defensing(&self) -> bool {
+        self.defensing
+    }
 }
 
 impl Attackable for Hero {
@@ -207,5 +233,8 @@ impl Attackable for Hero {
     }
     fn set_hp(&mut self, hp: i32) {
         self.hp = hp;
+    }
+    fn defensing(&self) -> bool {
+        self.defensing
     }
 }
