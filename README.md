@@ -1,3 +1,3 @@
-# snequental-dangeon
+# snequential-dangeon
 
 This is my hobby project.
