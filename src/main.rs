@@ -25,29 +25,33 @@ fn main() {
 fn game_loop(game_state: &mut GameState) {
     // モンスターの一覧
     let monsters = monsters();
-    let monster_new_generated = game_state.current_monster.hp == 0;
+    let monster_new_generated = game_state.current_monster.params().hp == 0;
     // モンスターがhpが0かどうか
     if monster_new_generated {
         // モンスターをランダムで選択して生成
         let mut rng = rand::thread_rng();
         let n = rng.gen_range(0..monsters.len());
         game_state.current_monster = monsters[n].clone();
-        println!("{}が現れた！", game_state.current_monster.name);
+        println!("{}が現れた！", game_state.current_monster.params().name);
     } else {
         // モンスターが生きている場合はモンスターの情報を表示
-        println!("{}のHP: {}", game_state.current_monster.name, game_state.current_monster.hp);
-        game_state.current_monster.defensing = false;
+        let monster = game_state.current_monster.params();
+        println!("{}のHP: {}", monster.name, monster.hp);
+        game_state.current_monster.params().set_defensing(false);
+
     }
 
-    game_state.hero.defensing = false;
+    game_state.hero.params.set_defensing(false);
+
+    let hero_params = game_state.hero.params();
 
     // ユーザーの入力を促すプロンプト
     print!("どうする？\n{}: 攻撃\n{}: 防御\n{}: 逃げる\n\n{}のHP: {}\n>",
         1,
         2,
         3,
-        game_state.hero.name,
-        game_state.hero.hp
+        hero_params.name,
+        hero_params.hp
     );
 
     // ユーザーの入力を受け取る
@@ -59,35 +63,35 @@ fn game_loop(game_state: &mut GameState) {
         Ok(_) => {
             match input.trim().parse::<i32>().unwrap() {
                 1 => {
-                    print!("{}の攻撃！\n", game_state.hero.name);
-                    game_state.hero.attack_to(&mut game_state.current_monster);
-                    if game_state.current_monster.hp == 0 {
-                        println!("{}を殺した", game_state.current_monster.name);
+                    print!("{}の攻撃！\n", game_state.hero.params().name);
+                    game_state.hero.params().attack_to(&mut game_state.current_monster);
+                    if game_state.current_monster.params().hp == 0 {
+                        println!("{}を殺した", game_state.current_monster.params().name);
                         return;
                     } else {
-                        println!("{}の攻撃！", game_state.current_monster.name);
-                        game_state.current_monster.attack_to(&mut game_state.hero);
-                        if game_state.hero.hp == 0 {
-                            println!("{}は死んだ", game_state.hero.name);
+                        println!("{}の攻撃！", game_state.current_monster.params().name);
+                        game_state.current_monster.params().attack_to(&mut game_state.hero);
+                        if game_state.hero.params().hp == 0 {
+                            println!("{}は死んだ", game_state.hero.params().name);
                             exit(0);
                         }
                     }
                 },
                 2 => {
-                    game_state.hero.defensing = true;
-                    println!("{}は防御した！", game_state.hero.name);
+                    game_state.hero.params().set_defensing(true);
+                    println!("{}は防御した！", game_state.hero.params().name);
                     monster_attack(&mut game_state.current_monster, &mut game_state.hero);
                 },
                 3 => {
-                    println!("負け犬{}は逃げ出した！", game_state.hero.name);
-                    game_state.current_monster.hp = 0;
+                    println!("負け犬{}は逃げ出した！", game_state.hero.params().name);
+                    game_state.current_monster.params().set_hp(0)
                 },
                 _ => {
                     println!("コマンドミス！");
-                    println!("{}の攻撃！", game_state.current_monster.name);
-                    game_state.current_monster.attack_to(&mut game_state.hero);
-                    if game_state.hero.hp == 0 {
-                        println!("{}は死んだ", game_state.hero.name);
+                    println!("{}の攻撃！", game_state.current_monster.params().name);
+                    game_state.current_monster.params().attack_to(&mut game_state.hero);
+                    if game_state.hero.params().hp == 0 {
+                        println!("{}は死んだ", game_state.hero.params().name);
                         exit(0);
                     }
                 }
@@ -100,10 +104,10 @@ fn game_loop(game_state: &mut GameState) {
 }
 
 fn monster_attack(monster: &mut Monster, hero: &mut Hero) {
-    println!("{}の攻撃！", monster.name);
-    monster.attack_to(hero);
-    if hero.hp == 0 {
-        println!("{}は死んだ", hero.name);
+    println!("{}の攻撃！", monster.params().name);
+    monster.params().attack_to(hero);
+    if hero.params().hp == 0 {
+        println!("{}は死んだ", hero.params().name);
         exit(0);
     }
 }
@@ -123,80 +127,103 @@ fn monsters() -> Vec<Monster> {
 }
 
 #[derive(Clone, Debug)]
-struct Monster {
+struct CharacterParameters {
     name: String,
     hp: i32,
     attack: i32,
     defense: i32,
     defensing: bool,
+}
+trait HasCharacterParameters {
+    fn params(&mut self) -> &mut CharacterParameters;
+    fn damaged(&mut self, damage: i32) {
+        let params = self.params();
+        print!("{}は{}のダメージを受けた！\n", params.name, damage);
+        params.set_hp(cmp::max(params.hp - damage, 0));
+    }
+}
+
+#[derive(Clone, Debug)]
+struct Monster {
+    params: CharacterParameters,
+}
+
+impl HasCharacterParameters for Monster {
+    fn params(&mut self) -> &mut CharacterParameters {
+        &mut self.params
+    }
 }
 
 #[derive(Clone, Debug)]
 struct Hero {
-    name: String,
-    hp: i32,
-    attack: i32,
-    defense: i32,
-    defensing: bool,
+    params: CharacterParameters,
+}
+
+impl HasCharacterParameters for Hero {
+    fn params(&mut self) -> &mut CharacterParameters {
+        &mut self.params
+    }
 }
 
 trait Attackable {
     fn name(&self) -> String;
-    fn attack<T: Attackable>(&self) -> i32;
-    fn defense<T: Attackable>(&self) -> i32;
+    fn attack(&self) -> i32;
+    fn defense(&self) -> i32;
     fn defensing(&self) -> bool;
-    fn attack_to<T: Attackable>(&self, target: &mut T) {
+    fn attack_to<T: HasCharacterParameters>(&self, target: &mut T) {
         let random_range = rand::thread_rng().gen_range(-5..5);
-        let damage = if target.defensing() {
-            self.attack::<T>() - target.defense::<T>() * 2 + random_range
+        let damage = if target.params().defensing {
+            self.attack() - target.params().defense * 2 + random_range
         } else {
-            self.attack::<T>() - target.defense::<T>() + random_range
+            self.attack() - target.params().defense + random_range
         };
         if damage > 0 {
             target.damaged(damage);
         } else {
-            println!("{}はダメージを受けていない！", target.name());
+            println!("{}はダメージを受けていない！", target.params().name);
         }
     }
-    fn damaged(&mut self, damage: i32) {
-        print!("{}は{}のダメージを受けた！\n", self.name(), damage);
-        self.set_hp(cmp::max(self.get_hp() - damage, 0));
-    }
-
     fn set_hp(&mut self, hp: i32);
     fn get_hp(&self) -> i32;
+    fn set_defensing(&mut self, defensing: bool);
 }
 
 impl Monster {
     fn new(name: &str, hp: i32, attack: i32, defense: i32) -> Monster {
-        Monster {
+        let params = CharacterParameters {
             name: name.to_string(),
             hp,
             attack,
             defense,
             defensing: false,
+        };
+        Monster {
+            params,
         }
     }
 }
 
 impl Hero {
     fn new(name: &str, hp: i32, attack: i32, defense: i32) -> Hero {
-        Hero {
+        let params = CharacterParameters {
             name: name.to_string(),
             hp,
             attack,
             defense,
             defensing: false,
+        };
+        Hero {
+            params,
         }
     }
 }
 
-impl Attackable for Monster {
-    fn attack<T: Attackable>(&self) -> i32 {
+impl Attackable for CharacterParameters {
+    fn attack(&self) -> i32 {
         self.attack
     }
 
-    fn defense<T: Attackable>(&self) -> i32 {
+    fn defense(&self) -> i32 {
         self.defense
     }
 
@@ -213,28 +240,7 @@ impl Attackable for Monster {
     fn defensing(&self) -> bool {
         self.defensing
     }
-}
-
-impl Attackable for Hero {
-    fn attack<T: Attackable>(&self) -> i32 {
-        self.attack
-    }
-
-    fn defense<T: Attackable>(&self) -> i32 {
-        self.defense
-    }
-
-    fn name(&self) -> String {
-        self.name.clone()
-    }
-
-    fn get_hp(&self) -> i32 {
-        self.hp
-    }
-    fn set_hp(&mut self, hp: i32) {
-        self.hp = hp;
-    }
-    fn defensing(&self) -> bool {
-        self.defensing
+    fn set_defensing(&mut self, defensing: bool) {
+        self.defensing = defensing;
     }
 }
