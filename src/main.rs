@@ -1,6 +1,6 @@
 use std::{io::{stdin, stdout, Write}, process::exit};
-use std::cmp;
 use rand::Rng;
+use sequential_dungeon::character::{CharacterParameters, HasCharacterParameters, Monster, Hero};
 
 struct GameState {
     hero: Hero,
@@ -41,7 +41,7 @@ fn game_loop(game_state: &mut GameState) {
 
     }
 
-    game_state.hero.params.set_defensing(false);
+    game_state.hero.params().set_defensing(false);
 
     let hero_params = game_state.hero.params();
 
@@ -126,45 +126,6 @@ fn monsters() -> Vec<Monster> {
     ];
 }
 
-#[derive(Clone, Debug)]
-struct CharacterParameters {
-    name: String,
-    hp: i32,
-    attack: i32,
-    defense: i32,
-    defensing: bool,
-}
-trait HasCharacterParameters {
-    fn params(&mut self) -> &mut CharacterParameters;
-    fn damaged(&mut self, damage: i32) {
-        let params = self.params();
-        print!("{}は{}のダメージを受けた！\n", params.name, damage);
-        params.set_hp(cmp::max(params.hp - damage, 0));
-    }
-}
-
-#[derive(Clone, Debug)]
-struct Monster {
-    params: CharacterParameters,
-}
-
-impl HasCharacterParameters for Monster {
-    fn params(&mut self) -> &mut CharacterParameters {
-        &mut self.params
-    }
-}
-
-#[derive(Clone, Debug)]
-struct Hero {
-    params: CharacterParameters,
-}
-
-impl HasCharacterParameters for Hero {
-    fn params(&mut self) -> &mut CharacterParameters {
-        &mut self.params
-    }
-}
-
 trait Attackable {
     fn name(&self) -> String;
     fn attack(&self) -> i32;
@@ -186,36 +147,6 @@ trait Attackable {
     fn set_hp(&mut self, hp: i32);
     fn get_hp(&self) -> i32;
     fn set_defensing(&mut self, defensing: bool);
-}
-
-impl Monster {
-    fn new(name: &str, hp: i32, attack: i32, defense: i32) -> Monster {
-        let params = CharacterParameters {
-            name: name.to_string(),
-            hp,
-            attack,
-            defense,
-            defensing: false,
-        };
-        Monster {
-            params,
-        }
-    }
-}
-
-impl Hero {
-    fn new(name: &str, hp: i32, attack: i32, defense: i32) -> Hero {
-        let params = CharacterParameters {
-            name: name.to_string(),
-            hp,
-            attack,
-            defense,
-            defensing: false,
-        };
-        Hero {
-            params,
-        }
-    }
 }
 
 impl Attackable for CharacterParameters {
