@@ -61,39 +61,47 @@ fn game_loop(game_state: &mut GameState) {
     let result = stdin().read_line(&mut input);
     match result {
         Ok(_) => {
-            match input.trim().parse::<i32>().unwrap() {
-                1 => {
-                    print!("{}の攻撃！\n", game_state.hero.params().name);
-                    game_state.hero.params().attack_to(&mut game_state.current_monster);
-                    if game_state.current_monster.params().hp == 0 {
-                        println!("{}を殺した", game_state.current_monster.params().name);
-                        return;
-                    } else {
-                        println!("{}の攻撃！", game_state.current_monster.params().name);
-                        game_state.current_monster.params().attack_to(&mut game_state.hero);
-                        if game_state.hero.params().hp == 0 {
-                            println!("{}は死んだ", game_state.hero.params().name);
-                            exit(0);
+            match input.trim().parse::<i32>() {
+                Ok(val) => {
+                    match val {
+                        1 => {
+                            print!("{}の攻撃！\n", game_state.hero.params().name);
+                            game_state.hero.params().attack_to(&mut game_state.current_monster);
+                            if game_state.current_monster.params().hp == 0 {
+                                println!("{}を殺した", game_state.current_monster.params().name);
+                                return;
+                            } else {
+                                println!("{}の攻撃！", game_state.current_monster.params().name);
+                                game_state.current_monster.params().attack_to(&mut game_state.hero);
+                                if game_state.hero.params().hp == 0 {
+                                    println!("{}は死んだ", game_state.hero.params().name);
+                                    exit(0);
+                                }
+                            }
+                        },
+                        2 => {
+                            game_state.hero.params().set_defensing(true);
+                            println!("{}は防御した！", game_state.hero.params().name);
+                            monster_attack(&mut game_state.current_monster, &mut game_state.hero);
+                        },
+                        3 => {
+                            println!("負け犬{}は逃げ出した！", game_state.hero.params().name);
+                            game_state.current_monster.params().set_hp(0)
+                        },
+                        _ => {
+                            println!("コマンドミス！");
+                            println!("{}の攻撃！", game_state.current_monster.params().name);
+                            game_state.current_monster.params().attack_to(&mut game_state.hero);
+                            if game_state.hero.params().hp == 0 {
+                                println!("{}は死んだ", game_state.hero.params().name);
+                                exit(0);
+                            }
                         }
+
                     }
                 },
-                2 => {
-                    game_state.hero.params().set_defensing(true);
-                    println!("{}は防御した！", game_state.hero.params().name);
-                    monster_attack(&mut game_state.current_monster, &mut game_state.hero);
-                },
-                3 => {
-                    println!("負け犬{}は逃げ出した！", game_state.hero.params().name);
-                    game_state.current_monster.params().set_hp(0)
-                },
-                _ => {
-                    println!("コマンドミス！");
-                    println!("{}の攻撃！", game_state.current_monster.params().name);
-                    game_state.current_monster.params().attack_to(&mut game_state.hero);
-                    if game_state.hero.params().hp == 0 {
-                        println!("{}は死んだ", game_state.hero.params().name);
-                        exit(0);
-                    }
+                Err(_) => {
+                    panic!("入力エラー");
                 }
             }
         },
