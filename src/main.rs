@@ -1,6 +1,6 @@
 use std::{io::{stdin, stdout, Write}, process::exit};
 use rand::Rng;
-use sequential_dungeon::character::{CharacterParameters, HasCharacterParameters, Monster, Hero};
+use sequential_dungeon::character::{HasCharacterParameters, Monster, Hero};
 
 struct GameState {
     hero: Hero,
@@ -132,54 +132,4 @@ fn monsters() -> Vec<Monster> {
         dragon,
         king_devil,
     ];
-}
-
-trait Attackable {
-    fn name(&self) -> String;
-    fn attack(&self) -> i32;
-    fn defense(&self) -> i32;
-    fn defensing(&self) -> bool;
-    fn attack_to<T: HasCharacterParameters>(&self, target: &mut T) {
-        let random_range = rand::thread_rng().gen_range(-5..5);
-        let damage = if target.params().defensing {
-            self.attack() - target.params().defense * 2 + random_range
-        } else {
-            self.attack() - target.params().defense + random_range
-        };
-        if damage > 0 {
-            target.damaged(damage);
-        } else {
-            println!("{}はダメージを受けていない！", target.params().name);
-        }
-    }
-    fn set_hp(&mut self, hp: i32);
-    fn get_hp(&self) -> i32;
-    fn set_defensing(&mut self, defensing: bool);
-}
-
-impl Attackable for CharacterParameters {
-    fn attack(&self) -> i32 {
-        self.attack
-    }
-
-    fn defense(&self) -> i32 {
-        self.defense
-    }
-
-    fn name(&self) -> String {
-        self.name.clone()
-    }
-
-    fn get_hp(&self) -> i32 {
-        self.hp
-    }
-    fn set_hp(&mut self, hp: i32) {
-        self.hp = hp;
-    }
-    fn defensing(&self) -> bool {
-        self.defensing
-    }
-    fn set_defensing(&mut self, defensing: bool) {
-        self.defensing = defensing;
-    }
 }

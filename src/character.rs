@@ -1,4 +1,5 @@
 use std::cmp;
+use rand::Rng;
 
 #[derive(Clone, Debug)]
 pub struct CharacterParameters {
@@ -17,6 +18,43 @@ impl CharacterParameters {
             attack,
             defense,
             defensing: false,
+        }
+    }
+    pub fn attack(&self) -> i32 {
+        self.attack
+    }
+
+    pub fn defense(&self) -> i32 {
+        self.defense
+    }
+
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn get_hp(&self) -> i32 {
+        self.hp
+    }
+    pub fn set_hp(&mut self, hp: i32) {
+        self.hp = hp;
+    }
+    pub fn defensing(&self) -> bool {
+        self.defensing
+    }
+    pub fn set_defensing(&mut self, defensing: bool) {
+        self.defensing = defensing;
+    }
+    pub fn attack_to<T: HasCharacterParameters>(&self, target: &mut T) {
+        let random_range = rand::thread_rng().gen_range(-5..5);
+        let damage = if target.params().defensing {
+            self.attack() - target.params().defense * 2 + random_range
+        } else {
+            self.attack() - target.params().defense + random_range
+        };
+        if damage > 0 {
+            target.damaged(damage);
+        } else {
+            println!("{}はダメージを受けていない！", target.params().name);
         }
     }
 }
