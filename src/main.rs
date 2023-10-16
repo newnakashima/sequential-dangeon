@@ -1,6 +1,6 @@
 use std::{io::{stdin, stdout, Write}, process::exit};
 use rand::Rng;
-use sequential_dungeon::character::{HasCharacterParameters, Monster, Hero};
+use sequential_dungeon::character::{HasCharacterParameters, Monster, Hero, HasLevel};
 
 struct GameState {
     hero: Hero,
@@ -8,8 +8,8 @@ struct GameState {
 }
 
 fn main() {
-    let current_monster: Monster = Monster::new("", 0, 0, 0);
-    let hero: Hero = Hero::new("勇者", 100, 10, 5);
+    let current_monster: Monster = Monster::new("", 0, 0, 0, 0);
+    let hero: Hero = Hero::new();
 
     let mut game_state = GameState {
         hero,
@@ -110,10 +110,10 @@ fn monster_attack(monster: &mut Monster, hero: &mut Hero) {
 }
 
 fn monsters() -> Vec<Monster> {
-    let goblin = Monster::new("ゴブリン", 20, 5, 3);
-    let slime = Monster::new("スライム", 15, 4, 4);
-    let dragon = Monster::new("ドラゴン", 50, 10, 10);
-    let king_devil = Monster::new("魔王", 1000, 100, 20);
+    let goblin = Monster::new("ゴブリン", 20, 5, 3, 1);
+    let slime = Monster::new("スライム", 15, 4, 4, 1);
+    let dragon = Monster::new("ドラゴン", 50, 10, 10, 5);
+    let king_devil = Monster::new("魔王", 1000, 100, 20, 0);
 
     return vec![
         goblin,
