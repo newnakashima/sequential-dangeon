@@ -43,15 +43,15 @@ fn game_loop(game_state: &mut GameState) {
 
     game_state.hero.params().set_defensing(false);
 
-    let hero_params = game_state.hero.params();
+    let hero = &mut game_state.hero;
 
     // ユーザーの入力を促すプロンプト
     print!("どうする？\n{}: 攻撃\n{}: 防御\n{}: 逃げる\n\n{}のHP: {}\n>",
         1,
         2,
         3,
-        hero_params.name,
-        hero_params.hp
+        hero.name(),
+        hero.hp(),
     );
 
     // ユーザーの入力を受け取る
@@ -64,10 +64,14 @@ fn game_loop(game_state: &mut GameState) {
 
     match input.trim().trim().parse::<i32>() {
         Ok(1) => {
-            print!("{}の攻撃！\n", game_state.hero.params().name);
-            game_state.hero.params().attack_to(&mut game_state.current_monster);
+            print!("{}の攻撃！\n", hero.params().name);
+            hero.params().attack_to(&mut game_state.current_monster);
             if game_state.current_monster.params().hp == 0 {
                 println!("{}を殺した", game_state.current_monster.params().name);
+                let exp_got = game_state.current_monster.get_exp();
+                println!("{}の経験値を得た", exp_got);
+                hero.add_exp(exp_got);
+                println!("現在の経験値: {}", hero.exp());
                 return;
             } else {
                 println!("{}の攻撃！", game_state.current_monster.params().name);

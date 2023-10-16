@@ -91,6 +91,7 @@ pub struct Hero {
 pub trait HasLevel {
     fn level(&self) -> i32;
     fn exp(&self) -> i32;
+    fn add_exp(&mut self, exp_got: i32);
 }
 
 impl HasLevel for Hero {
@@ -99,6 +100,9 @@ impl HasLevel for Hero {
     }
     fn exp(&self) -> i32 {
         self.exp
+    }
+    fn add_exp(&mut self, exp_got: i32) {
+        self.exp += exp_got;
     }
 }
 
@@ -169,10 +173,21 @@ impl Hero {
         }
     }
 
-    pub fn check_level_up(&self, exp_got: i32) -> i32 {
+    pub fn name(&self) -> String {
+        self.params.name.clone()
+    }
+    pub fn hp(&self) -> i32 {
+        self.params.hp
+    }
+
+    pub fn set_exp(&mut self, exp: i32) {
+        self.exp = exp;
+    }
+
+    pub fn check_level_up(&self, current_exp: i32) -> i32 {
         let mut level = 1;
         for (l, exp) in Hero::exp_table() {
-            if exp_got >= exp {
+            if current_exp >= exp {
                 level = l;
             }
         }
